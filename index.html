@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a2744">
+<title>KoolAircon Field App</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{
+  --navy:#1a2744;--teal:#0d7377;--green:#2d7d46;--amber:#c47a00;
+  --red:#b53a2a;--white:#fff;--off:#f7f8fa;--ltgray:#e8edf3;
+  --mid:#6b7280;--text:#1f2937;--r:12px;
+  --shadow:0 2px 16px rgba(0,0,0,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;height:100dvh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  background:var(--off);color:var(--text);font-size:16px;overflow:hidden}
+.app{display:flex;flex-direction:column;
+  height:100vh;height:100dvh;
+  max-width:480px;margin:0 auto;
+  background:var(--white);box-shadow:0 0 40px rgba(0,0,0,.12);position:relative}
+.screen{display:none;flex-direction:column;height:100%;min-height:0}
+.screen.active{display:flex}
+
+/* ── Header ── */
+.hdr{background:var(--navy);color:#fff;padding:14px 18px 12px;
+  flex-shrink:0;display:flex;align-items:center;gap:12px}
+.hdr-back{background:rgba(255,255,255,.15);border:none;color:#fff;
+  border-radius:8px;width:36px;height:36px;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-title{font-size:17px;font-weight:600;flex:1}
+.hdr-sub{font-size:11px;opacity:.7;margin-top:1px}
+.hdr-badge{font-size:11px;background:rgba(255,255,255,.15);
+  padding:3px 10px;border-radius:20px;white-space:nowrap}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
+.pad{padding:16px}
+.footer{padding:14px 16px;padding-bottom:max(14px,env(safe-area-inset-bottom));
+  border-top:1px solid var(--ltgray);
+  flex-shrink:0;background:var(--white);
+  display:flex;align-items:center;gap:12px}
+.footer .btn{flex:1}
+.prog-wrap{height:4px;background:rgba(255,255,255,.2);flex-shrink:0}
+.prog-bar{height:4px;background:#fff;transition:width .3s;width:0%}
+
+/* ── Sign-in ── */
+#s0{background:var(--navy)}
+.si-body{flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:40px 32px}
+.si-logo{font-size:52px;margin-bottom:20px}
+.si-brand{font-size:30px;font-weight:700;color:#fff;letter-spacing:-.5px;margin-bottom:6px}
+.si-tag{font-size:14px;color:rgba(255,255,255,.55);margin-bottom:48px;text-align:center}
+.si-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;padding:28px 24px;width:100%;max-width:320px;
+  display:flex;flex-direction:column;align-items:center;gap:14px}
+.g-btn{display:flex;align-items:center;gap:10px;background:#fff;color:var(--text);
+  border:none;border-radius:10px;padding:13px 20px;font-size:14px;font-weight:600;
+  cursor:pointer;width:100%;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);transition:all .15s}
+.g-btn:hover{background:#f5f5f5}
+.si-status{font-size:12px;color:rgba(255,255,255,.5);min-height:18px;text-align:center}
+.si-foot{font-size:11px;color:rgba(255,255,255,.22);text-align:center;padding:16px 32px}
+
+/* ── Calendar ── */
+.cal-wrap{background:var(--navy);flex-shrink:0;padding:0 0 12px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 8px}
+.cal-month-btn{font-size:14px;font-weight:600;color:#fff;background:none;border:none;
+  cursor:pointer;padding:4px 8px;border-radius:8px;transition:background .15s}
+.cal-month-btn:hover{background:rgba(255,255,255,.12)}
+.cal-nav-btn{background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:8px;
+  width:30px;height:30px;font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.cal-nav-btn:hover{background:rgba(255,255,255,.22)}
+.cal-days-hdr{display:grid;grid-template-columns:repeat(7,1fr);padding:0 8px;margin-bottom:4px}
+.cal-day-hdr{text-align:center;font-size:10px;font-weight:600;
+  color:rgba(255,255,255,.4);letter-spacing:.5px;text-transform:uppercase}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:0 8px;gap:2px}
+.cal-cell{display:flex;flex-direction:column;align-items:center;padding:3px 2px;
+  cursor:pointer;border-radius:10px;transition:background .15s;min-height:48px}
+.cal-cell:hover{background:rgba(255,255,255,.08)}
+.cal-cell.other-month .cal-date{opacity:.3}
+.cal-date{width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:500;color:#fff;border-radius:50%;transition:all .15s}
+.cal-cell.today .cal-date{border:2px solid rgba(255,255,255,.4)}
+.cal-cell.selected .cal-date{background:#fff;color:var(--navy);font-weight:700}
+.cal-dots{display:flex;gap:2px;justify-content:center;margin-top:3px;min-height:7px}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.dot-am{background:#60a5fa}.dot-pm{background:#34d399}.dot-ot{background:#fbbf24}
+.sel-row{display:flex;align-items:center;justify-content:space-between;padding:8px 16px 0}
+.sel-lbl{font-size:12px;color:rgba(255,255,255,.5)}
+.sel-date-txt{font-size:14px;font-weight:600;color:#fff}
+.sel-count{font-size:11px;background:var(--teal);color:#fff;padding:2px 10px;border-radius:20px}
+
+/* ── Month picker overlay ── */
+.month-picker{position:absolute;top:0;left:0;right:0;bottom:0;
+  background:rgba(10,20,45,.95);z-index:50;display:none;
+  flex-direction:column;padding:24px}
+.month-picker.open{display:flex}
+.mp-title{font-size:18px;font-weight:700;color:#fff;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:space-between}
+.mp-close{background:rgba(255,255,255,.15);border:none;color:#fff;
+  border-radius:8px;width:36px;height:36px;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.mp-year-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:20px}
+.mp-year{font-size:20px;font-weight:600;color:#fff}
+.mp-year-btn{background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:8px;
+  width:32px;height:32px;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.mp-months{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mp-month{padding:14px 8px;text-align:center;border-radius:10px;cursor:pointer;
+  font-size:14px;color:rgba(255,255,255,.7);transition:all .15s;
+  border:1px solid transparent}
+.mp-month:hover{background:rgba(255,255,255,.1)}
+.mp-month.active{background:var(--teal);color:#fff;border-color:var(--teal);font-weight:600}
+.mp-foot{margin-top:20px;text-align:center}
+
+/* ── User pill ── */
+.user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);
+  border-radius:20px;padding:4px 10px 4px 4px}
+.user-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;
+  background:rgba(255,255,255,.2)}
+.user-name{font-size:12px;color:rgba(255,255,255,.85);font-weight:500}
+
+/* ── Job cards ── */
+.job-card{background:var(--white);border:1.5px solid var(--ltgray);
+  border-radius:var(--r);padding:14px 16px;margin-bottom:10px;
+  cursor:pointer;transition:all .15s;box-shadow:var(--shadow)}
+.job-card:hover,.job-card:active{border-color:var(--teal);background:#f0fbfb}
+.jc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.jc-name{font-size:16px;font-weight:600}
+.jc-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.bam{background:#dbeafe;color:#1d4ed8}.bpm{background:#dcfce7;color:#15803d}
+.bot{background:#fef3c7;color:#b45309}
+.jc-row{font-size:13px;color:var(--mid);margin-bottom:3px;display:flex;gap:5px;align-items:flex-start}
+.jc-addr{font-size:13px;color:var(--teal);text-decoration:underline;
+  margin-bottom:3px;display:flex;gap:5px;cursor:pointer}
+.jc-dur{font-size:12px;color:var(--teal);font-weight:500;margin-top:6px}
+.jc-note{background:#fef3c7;border-radius:8px;padding:8px 10px;
+  font-size:12px;color:#854f0b;margin-top:8px}
+.sp{display:inline-block;font-size:11px;padding:2px 10px;
+  border-radius:20px;margin-top:6px;background:var(--ltgray);color:var(--mid)}
+
+/* ── Adhoc ── */
+.adhoc-toggle{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;border-top:1px solid var(--ltgray);cursor:pointer}
+.adhoc-toggle:hover{background:var(--off)}
+.adhoc-lbl{font-size:14px;font-weight:500;color:var(--amber)}
+.adhoc-icon{font-size:18px;color:var(--amber);transition:transform .2s}
+.adhoc-icon.open{transform:rotate(180deg)}
+.adhoc-body{display:none;padding:16px;border-top:1px dashed var(--amber);background:#fffbf0}
+.adhoc-body.open{display:block}
+
+/* ── Info card ── */
+.info-card{background:var(--navy);color:#fff;border-radius:var(--r);padding:16px;margin-bottom:16px}
+.ic-title{font-size:11px;opacity:.6;margin-bottom:10px;letter-spacing:.5px;
+  text-transform:uppercase;font-weight:500}
+.ic-row{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+.ic-row:last-child{border:none}
+.ic-lbl{font-size:12px;opacity:.6;width:90px;flex-shrink:0}
+.ic-val{font-size:13px;font-weight:500}
+.ic-link{font-size:13px;font-weight:500;color:#60d8dc;text-decoration:underline;cursor:pointer}
+.ic-mono{font-size:11px;opacity:.5;font-family:monospace}
+
+/* ── Form elements ── */
+.sec{font-size:12px;font-weight:600;color:var(--mid);
+  text-transform:uppercase;letter-spacing:.8px;margin:18px 0 8px}
+.sec:first-child{margin-top:0}
+.fw{margin-bottom:14px}
+.flbl{font-size:14px;font-weight:500;color:var(--text);
+  margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.req-dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
+.fhint{font-size:12px;color:var(--mid);margin-bottom:8px}
+
+/* ── Photo area ── */
+.photo-area{border:2px dashed var(--ltgray);border-radius:var(--r);
+  padding:20px;text-align:center;cursor:pointer;
+  transition:all .15s;background:var(--off);position:relative}
+.photo-area:hover{border-color:var(--teal)}
+.photo-area.done{border-style:solid;border-color:var(--teal);padding:6px;background:var(--white)}
+.photo-area.uploading{border-color:#60a5fa;background:#eff6ff}
+.photo-area input{display:none}
+.photo-icon{font-size:30px;margin-bottom:6px}
+.photo-lbl{font-size:13px;color:var(--mid)}
+.photo-preview{width:100%;border-radius:8px;object-fit:cover;max-height:180px;display:none}
+.photo-actions{display:flex;gap:8px;margin-top:6px}
+.photo-action-btn{flex:1;padding:7px;border:none;border-radius:8px;
+  font-size:12px;font-weight:500;cursor:pointer}
+.btn-retake{background:#dbeafe;color:#1d4ed8}
+.btn-delete{background:#fee2e2;color:#b91c1c}
+.photo-info{font-size:11px;color:var(--teal);margin-top:4px}
+.no-photo-row{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 4px}
+.no-photo-cb{width:18px;height:18px;border:2px solid var(--ltgray);border-radius:4px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.no-photo-cb.chk{background:var(--amber);border-color:var(--amber);color:#fff}
+.no-photo-txt{font-size:13px;color:var(--mid);cursor:pointer}
+
+/* ── Stepper ── */
+.stepper-wrap{display:flex;align-items:center;gap:10px}
+.stepper{display:flex;align-items:center;border:1.5px solid var(--ltgray);
+  border-radius:var(--r);overflow:hidden;width:130px}
+.step-btn{background:var(--off);border:none;width:42px;height:42px;font-size:22px;
+  cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center}
+.step-btn:hover{background:var(--ltgray)}
+.step-val{flex:1;text-align:center;font-size:18px;font-weight:600;padding:10px 0}
+.step-unit{font-size:12px;color:var(--mid)}
+
+/* ── Checkbox ── */
+.cb-item{display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border:1.5px solid var(--ltgray);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.cb-item:hover,.cb-item.chk{border-color:var(--amber)}
+.cb-item.chk{background:#fff8e6}
+.cb-box{width:22px;height:22px;border:2px solid var(--ltgray);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.cb-item.chk .cb-box{background:var(--amber);border-color:var(--amber);color:#fff}
+.cb-txt{font-size:14px}
+
+/* ── Stars ── */
+.stars{display:flex;gap:12px;justify-content:center;padding:8px 0}
+.star{font-size:42px;cursor:pointer;transition:transform .1s;line-height:1}
+.star:hover,.star.lit{transform:scale(1.15)}
+.star-row-lbl{text-align:center;font-size:13px;color:var(--mid);margin-top:4px}
+
+/* ── Emoji ── */
+.emoji-row{display:flex;gap:10px}
+.emoji-opt{flex:1;border:2px solid var(--ltgray);border-radius:var(--r);
+  padding:14px 8px;text-align:center;cursor:pointer;transition:all .15s;background:var(--off)}
+.emoji-opt span{font-size:28px;display:block;margin-bottom:4px}
+.emoji-opt small{font-size:12px;color:var(--mid)}
+.sel-happy{border-color:#16a34a;background:#f0fdf4}
+.sel-neutral{border-color:#ca8a04;background:#fefce8}
+.sel-unhappy{border-color:var(--red);background:#fef2f2}
+
+/* ── Radio ── */
+.radio-group{display:flex;flex-direction:column;gap:8px}
+.radio-item{display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border:1.5px solid var(--ltgray);border-radius:10px;cursor:pointer;transition:all .15s}
+.radio-item:hover,.radio-item.sel{border-color:var(--teal)}
+.radio-item.sel{background:#f0fbfb}
+.radio-circle{width:20px;height:20px;border:2px solid var(--ltgray);border-radius:50%;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.radio-item.sel .radio-circle{border-color:var(--teal)}
+.radio-dot{width:10px;height:10px;border-radius:50%;background:var(--teal);display:none}
+.radio-item.sel .radio-dot{display:block}
+.radio-txt{font-size:14px}
+
+/* ── Textarea/Input ── */
+.ta,.txt-input,.sel-input{width:100%;border:1.5px solid var(--ltgray);
+  border-radius:var(--r);padding:12px 14px;font-size:14px;font-family:inherit;transition:border .15s}
+.ta{resize:none;min-height:80px}
+.ta:focus,.txt-input:focus,.sel-input:focus{outline:none;border-color:var(--teal)}
+.ta::placeholder,.txt-input::placeholder{color:var(--mid)}
+.sel-input{background:var(--white);cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center}
+
+/* ── QR ── */
+.qr-big{width:220px;height:220px;background:var(--ltgray);border-radius:16px;
+  margin:0 auto 16px;display:flex;align-items:center;justify-content:center}
+
+/* ── Alerts ── */
+.alert{border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:13px;line-height:1.5}
+.alert strong{display:block;margin-bottom:2px}
+.al-warn{background:#fef3c7;color:#b45309;border:1px solid #fde68a}
+.al-ok{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+.al-info{background:var(--ltgray);color:var(--text)}
+.al-danger{background:#fee2e2;color:#b91c1c}
+.div{height:1px;background:var(--ltgray);margin:16px 0}
+
+/* ── Buttons ── */
+.btn{width:100%;padding:15px;border:none;border-radius:var(--r);
+  font-size:16px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:#0a5e62}
+.btn-primary:disabled{background:var(--ltgray);color:var(--mid);cursor:not-allowed}
+.btn-secondary{background:var(--off);color:var(--text);border:1.5px solid var(--ltgray)}
+.btn-success{background:var(--green);color:#fff}
+.btn-amber{background:var(--amber);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-row{display:flex;gap:10px}
+.btn-row .btn{flex:1}
+
+/* ── Issue report FAB ── */
+/* Lives inside the footer row — never overlaps content */
+.fab-wrap{position:relative;flex-shrink:0}
+.issue-fab{width:52px;height:52px;background:var(--red);border-radius:50%;
+  border:none;color:#fff;font-size:20px;cursor:pointer;
+  box-shadow:0 4px 16px rgba(181,58,42,.4);
+  display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.issue-fab:hover{transform:scale(1.08)}
+.issue-count-badge{position:absolute;top:-4px;right:-4px;
+  background:#fff;color:var(--red);border-radius:50%;
+  width:18px;height:18px;font-size:11px;font-weight:700;
+  display:none;align-items:center;justify-content:center;
+  box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.issue-sheet{position:absolute;bottom:0;left:0;right:0;background:var(--white);
+  border-radius:20px 20px 0 0;padding:0 0 32px;z-index:20;
+  transform:translateY(100%);transition:transform .3s;
+  box-shadow:0 -8px 32px rgba(0,0,0,.18)}
+.issue-sheet.open{transform:translateY(0)}
+.issue-sheet-hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px 12px}
+.issue-sheet-title{font-size:16px;font-weight:600;color:var(--red)}
+.issue-sheet-close{background:var(--ltgray);border:none;border-radius:8px;
+  width:32px;height:32px;font-size:18px;cursor:pointer}
+.issue-sheet-body{padding:0 20px;max-height:70vh;overflow-y:auto}
+.issue-count{font-size:12px;background:#fee2e2;color:var(--red);
+  border-radius:20px;padding:1px 8px;margin-left:6px;font-weight:600}
+
+/* ── Upload overlay ── */
+.upload-overlay{position:absolute;inset:0;background:rgba(26,39,68,.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  z-index:100;color:#fff;text-align:center;padding:32px}
+.upload-overlay.show{display:flex}
+.upload-title{font-size:18px;font-weight:700;margin-bottom:10px}
+.upload-sub{font-size:13px;opacity:.8;margin-bottom:20px;line-height:1.6}
+.upload-list{width:100%;max-width:300px;text-align:left}
+.upload-item{display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,.1);font-size:13px}
+.upload-item:last-child{border:none}
+.ui-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+.ui-done{width:16px;height:16px;flex-shrink:0;font-size:14px}
+.ui-name{flex:1;opacity:.8}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Overlay (general) ── */
+.overlay{position:absolute;inset:0;background:rgba(26,39,68,.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  z-index:100;color:#fff;text-align:center;padding:32px}
+.overlay.show{display:flex}
+.ov-icon{font-size:52px;margin-bottom:18px}
+.ov-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.ov-sub{font-size:14px;opacity:.8;line-height:1.6}
+.spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:20px}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:40px 24px}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--mid);line-height:1.6}
+
+/* ── Screen 4 special ── */
+.rating-card{background:var(--off);border-radius:var(--r);padding:20px 16px;
+  text-align:center;margin-bottom:14px;border:1.5px solid var(--ltgray)}
+.rating-title{font-size:17px;font-weight:600;margin-bottom:4px}
+.rating-sub{font-size:13px;color:var(--mid);margin-bottom:16px}
+.not-present{display:flex;align-items:center;gap:10px;padding:12px 14px;
+  border:1.5px solid var(--ltgray);border-radius:10px;cursor:pointer;margin-bottom:10px;transition:all .15s}
+.not-present:hover{border-color:var(--amber)}
+.not-present.chk{border-color:var(--amber);background:#fff8e6}
+.np-box{width:22px;height:22px;border:2px solid var(--ltgray);border-radius:6px;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.not-present.chk .np-box{background:var(--amber);border-color:var(--amber);color:#fff}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ S0 SIGN IN ══ -->
+<div class="screen active" id="s0">
+  <div class="si-body">
+    <div class="si-logo">❄️</div>
+    <div class="si-brand">KoolAircon</div>
+    <div class="si-tag">Field technician app</div>
+    <div class="si-card">
+      <div style="font-size:15px;font-weight:500;color:rgba(255,255,255,.8)">Sign in to continue</div>
+      <button class="g-btn" onclick="signIn()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/></svg>
+        Sign in with Google
+      </button>
+      <div class="si-status" id="si-status"></div>
+      <div style="font-size:12px;color:rgba(255,255,255,.35);text-align:center;line-height:1.5">Only Drive access for job photos is requested</div>
+    </div>
+  </div>
+  <div class="si-foot">KoolAircon Field App · v5</div>
+</div>
+
+<!-- ══ S1 CALENDAR + JOBS ══ -->
+<div class="screen" id="s1">
+  <div class="hdr" style="padding-bottom:0">
+    <div style="flex:1"><div class="hdr-title">KoolAircon</div></div>
+    <div class="user-pill" id="user-pill">
+      <img class="user-avatar" id="user-avatar" src="" alt="">
+      <span class="user-name" id="user-name">Technician</span>
+    </div>
+  </div>
+  <div class="cal-wrap">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="shiftWeek(-1)">‹</button>
+      <button class="cal-month-btn" id="cal-month-btn" onclick="openMonthPicker()">June 2026</button>
+      <button class="cal-nav-btn" onclick="shiftWeek(1)">›</button>
+    </div>
+    <div class="cal-days-hdr">
+      <div class="cal-day-hdr">Sun</div><div class="cal-day-hdr">Mon</div>
+      <div class="cal-day-hdr">Tue</div><div class="cal-day-hdr">Wed</div>
+      <div class="cal-day-hdr">Thu</div><div class="cal-day-hdr">Fri</div>
+      <div class="cal-day-hdr">Sat</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="sel-row">
+      <div><div class="sel-lbl">Jobs for</div><div class="sel-date-txt" id="sel-date-lbl">Today</div></div>
+      <div class="sel-count" id="sel-count">0 jobs</div>
+    </div>
+  </div>
+  <div class="scroll">
+    <div class="pad"><div id="job-list"></div><div class="div"></div></div>
+    <div class="adhoc-toggle" onclick="toggleAdhoc()">
+      <span class="adhoc-lbl">⚡ Unlisted / Adhoc Job</span>
+      <span class="adhoc-icon" id="adhoc-icon">▾</span>
+    </div>
+    <div class="adhoc-body" id="adhoc-body">
+      <div class="fw"><div class="flbl"><span class="req-dot"></span>Customer Name</div><input class="txt-input" id="ah-name" placeholder="e.g. Mrs Tan"></div>
+      <div class="fw"><div class="flbl"><span class="req-dot"></span>Address</div><input class="txt-input" id="ah-addr" placeholder="Blk / street / unit"></div>
+      <div class="fw"><div class="flbl"><span class="req-dot"></span>Postal Code</div><input class="txt-input" id="ah-post" placeholder="6-digit postal" maxlength="6" inputmode="numeric"></div>
+      <div class="fw"><div class="flbl"><span class="req-dot"></span>Service Type</div><select class="sel-input" id="ah-svc"><option value="">Select service</option></select></div>
+      <div class="fw"><div class="flbl"><span class="req-dot"></span>Units</div>
+        <div class="stepper-wrap"><div class="stepper">
+          <button class="step-btn" onclick="ahStep(-1)">−</button>
+          <div class="step-val" id="ah-units">1</div>
+          <button class="step-btn" onclick="ahStep(1)">+</button>
+        </div><span class="step-unit">units</span></div></div>
+      <div class="fw"><div class="flbl">Customer WhatsApp</div><input class="txt-input" id="ah-phone" placeholder="+65XXXXXXXX" inputmode="tel"></div>
+      <button class="btn btn-amber" onclick="startAdhoc()">Start Adhoc Job →</button>
+    </div>
+  </div>
+  <!-- Month picker -->
+  <div class="month-picker" id="month-picker">
+    <div class="mp-title">
+      <span>Jump to date</span>
+      <button class="mp-close" onclick="closeMonthPicker()">✕</button>
+    </div>
+    <div class="mp-year-row">
+      <button class="mp-year-btn" onclick="mpYearStep(-1)">‹</button>
+      <div class="mp-year" id="mp-year">2026</div>
+      <button class="mp-year-btn" onclick="mpYearStep(1)">›</button>
+    </div>
+    <div class="mp-months" id="mp-months"></div>
+    <div class="mp-foot">
+      <button class="btn btn-secondary" style="width:auto;padding:10px 24px" onclick="mpGoToday()">Back to Today</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S2 JOB START ══ -->
+<div class="screen" id="s2">
+  <div class="hdr">
+    <button class="hdr-back" onclick="goTo(1)">←</button>
+    <div style="flex:1"><div class="hdr-title">Job Start</div><div class="hdr-sub" id="s2-sub"></div></div>
+  </div>
+  <div class="scroll"><div class="pad">
+    <div class="info-card" id="s2-info"></div>
+    <!-- Units to service today stepper -->
+    <div class="fw">
+      <div class="flbl">Units to service today</div>
+      <div class="fhint">Adjust if different from what was booked</div>
+      <div class="stepper-wrap">
+        <div class="stepper">
+          <button class="step-btn" onclick="changeUnitsToService(-1)">−</button>
+          <div class="step-val" id="units-to-service">1</div>
+          <button class="step-btn" onclick="changeUnitsToService(1)">+</button>
+        </div><span class="step-unit">units</span>
+      </div>
+    </div>
+    <div class="sec">Before Photos</div>
+    <div class="alert al-warn"><strong>📸 Take these BEFORE you start work</strong>One photo per unit. Photos are saved on your device and uploaded at the end.</div>
+    <div id="before-photos-wrap"></div>
+  </div></div>
+  <div class="footer">
+    <button class="btn btn-primary" onclick="markArrived()" id="arrive-btn">✓ Mark Arrived &amp; Start Job</button>
+    <div class="fab-wrap">
+      <button class="issue-fab" onclick="openIssue('start')" title="Report issue">⚠</button>
+      <div class="issue-count-badge" id="fab-badge-s2"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S3 COMPLETION ══ -->
+<div class="screen" id="s3">
+  <div class="hdr">
+    <button class="hdr-back" onclick="goTo(2)">←</button>
+    <div style="flex:1"><div class="hdr-title">Job Completion</div><div class="hdr-sub" id="s3-sub"></div></div>
+    <div class="hdr-badge" id="s3-prog">0 / 0</div>
+  </div>
+  <div class="prog-wrap"><div class="prog-bar" id="prog-bar"></div></div>
+  <div class="scroll"><div class="pad" id="s3-form"></div></div>
+  <div class="footer">
+    <button class="btn btn-success" id="submit-btn" onclick="submitJob()" disabled>✓ Submit &amp; Complete Job</button>
+    <div class="fab-wrap">
+      <button class="issue-fab" onclick="openIssue('completion')" title="Report issue">⚠</button>
+      <div class="issue-count-badge" id="fab-badge-s3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ S4 REVIEW + RATING ══ -->
+<div class="screen" id="s4">
+  <div class="hdr"><div class="hdr-title">Job Complete ✓</div></div>
+  <div class="scroll"><div class="pad">
+    <div class="alert al-ok"><strong>Job submitted!</strong>All photos and data saved. Upload will complete shortly.</div>
+
+    <!-- Not present toggle -->
+    <div class="not-present" id="not-present-row" onclick="toggleNotPresent()">
+      <div class="np-box" id="np-box"></div>
+      <div>
+        <div style="font-size:14px;font-weight:500">Customer not present</div>
+        <div style="font-size:12px;color:var(--mid)">Only maid / no one home — send review via WhatsApp instead</div>
+      </div>
+    </div>
+
+    <!-- Customer present: rating + QR -->
+    <div id="customer-present-section">
+      <div class="rating-card">
+        <div class="rating-title">How was your experience?</div>
+        <div class="rating-sub">Ask the customer to rate the service</div>
+        <div class="stars" id="stars-row">
+          <span class="star" onclick="rateStar(1)">☆</span>
+          <span class="star" onclick="rateStar(2)">☆</span>
+          <span class="star" onclick="rateStar(3)">☆</span>
+          <span class="star" onclick="rateStar(4)">☆</span>
+          <span class="star" onclick="rateStar(5)">☆</span>
+        </div>
+        <div class="star-row-lbl" id="star-lbl">Tap a star</div>
+      </div>
+
+      <!-- QR appears after 4+ stars -->
+      <div id="qr-section" style="display:none">
+        <div class="div"></div>
+        <div style="text-align:center;margin-bottom:14px">
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px">Leave us a Google review</div>
+          <div style="font-size:13px;color:var(--mid)">Get 10% off your next service</div>
+        </div>
+        <div class="qr-big" id="qr-box">
+          <div style="font-size:13px;color:var(--mid);padding:20px;text-align:center">Set GOOGLE_REVIEW_URL in CFG</div>
+        </div>
+        <div class="fw" style="margin-top:12px">
+          <div class="flbl">Take a photo of their review confirmation screen</div>
+          <div class="fhint">This confirms the review and qualifies for the 10% discount</div>
+          <div class="photo-area" onclick="triggerPhotoEl('review-photo-input')" id="review-photo-area">
+            <input type="file" accept="image/*" capture="environment" id="review-photo-input" onchange="handleReviewPhoto(this)">
+            <div class="photo-icon">📸</div>
+            <div class="photo-lbl">Photo of review confirmation</div>
+          </div>
+          <img id="review-photo-preview" class="photo-preview" alt="">
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div class="footer">
+    <button class="btn btn-primary" onclick="finishJob()" id="finish-btn">Done — Back to Jobs</button>
+    <div class="fab-wrap">
+      <button class="issue-fab" onclick="openIssue('review')" title="Report issue">⚠</button>
+      <div class="issue-count-badge" id="fab-badge-s4"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ISSUE SHEET (shared across screens) ══ -->
+<div class="issue-sheet" id="issue-sheet">
+  <div class="issue-sheet-hdr">
+    <div class="issue-sheet-title">⚠ Report Issue <span class="issue-count" id="issue-count" style="display:none">0</span></div>
+    <button class="issue-sheet-close" onclick="closeIssue()">✕</button>
+  </div>
+  <div class="issue-sheet-body">
+    <div id="issue-list"></div>
+    <div class="div"></div>
+    <div style="font-size:14px;font-weight:600;margin-bottom:12px">New Issue</div>
+    <div class="fw">
+      <div class="flbl">Issue Type</div>
+      <select class="sel-input" id="issue-type">
+        <option value="">Select type</option>
+        <option value="damaged_unit">Damaged unit / component</option>
+        <option value="pre_existing">Pre-existing damage (before service)</option>
+        <option value="access_problem">Access problem</option>
+        <option value="safety_hazard">Safety hazard</option>
+        <option value="aging_unit">Aging unit — potential replacement needed</option>
+        <option value="incomplete_service">Could not complete service</option>
+        <option value="customer_complaint">Customer complaint</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="fw">
+      <div class="flbl">Description</div>
+      <textarea class="ta" id="issue-desc" placeholder="Describe what you observed..." rows="3"></textarea>
+    </div>
+    <div class="fw">
+      <div class="flbl">Evidence (optional)</div>
+      <div class="fhint">Photo or video. Or tick below to send later via WhatsApp.</div>
+      <div class="photo-area" onclick="triggerPhotoEl('issue-media-input')" id="issue-media-area">
+        <input type="file" accept="image/*,video/*" capture="environment" id="issue-media-input" onchange="handleIssueMedia(this)" multiple>
+        <div class="photo-icon">📎</div>
+        <div class="photo-lbl">Attach photo or video</div>
+      </div>
+      <div id="issue-media-previews" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
+      <div class="no-photo-row" onclick="toggleEvidenceLater()">
+        <div class="no-photo-cb" id="evidence-later-cb"></div>
+        <div class="no-photo-txt">I will send evidence later via WhatsApp</div>
+      </div>
+    </div>
+    <button class="btn btn-red" onclick="addIssue()" style="margin-bottom:16px">Add Issue</button>
+  </div>
+</div>
+
+<!-- Upload progress overlay -->
+<div class="upload-overlay" id="upload-overlay">
+  <div class="upload-title" id="ul-title">Uploading to Google Drive</div>
+  <div class="upload-sub" id="ul-sub">Please keep the app open</div>
+  <div class="upload-list" id="ul-list"></div>
+</div>
+
+<!-- General overlay -->
+<div class="overlay" id="overlay">
+  <div class="spinner" id="ov-spinner"></div>
+  <div class="ov-icon" id="ov-icon" style="display:none"></div>
+  <div class="ov-title" id="ov-title">Processing...</div>
+  <div class="ov-sub" id="ov-sub"></div>
+</div>
+
+</div><!-- /.app -->
+
+<!-- ═══════════════════════════════════════
+     CONFIG
+     ═══════════════════════════════════ -->
+<script>
+const CFG = {
+  CLIENT_ID:        "639975847282-1vruor54ie7tct5p74f8t8k0a62v750t.apps.googleusercontent.com",
+  SCOPES:           "https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar.readonly",
+  DRIVE_ROOT_NAME:  "KoolAircon Jobs",
+  DRIVE_ROOT_ID:    "1hxwi9RQGg9myRe-u9Rg6UdViHQ2wZDJJ", // Shared folder — all technicians write here
+  CALENDAR_ID:      "5d0a5d4947473f83f855ce090ac206db955492a254ef352a4df2704fc3482e01@group.calendar.google.com",
+  GOOGLE_REVIEW_URL:"https://g.page/r/REPLACE_ME",
+  MAX_PHOTO_KB:     400,   // compress to this target
+  MAX_PHOTO_PX:     1600,  // max dimension in pixels
+};
+
+const SERVICE_TYPES = [
+  {value:"General_Service",   label:"General Service",   mpu:15},
+  {value:"Chemical_Wash",     label:"Chemical Wash",     mpu:30},
+  {value:"Chemical_Overhaul", label:"Chemical Overhaul", mpu:90},
+  {value:"Installation",      label:"Installation",      mpu:240},
+  {value:"Repair",            label:"Repair / Parts",    mpu:60},
+  {value:"Condenser_Service", label:"Condenser Service", mpu:30},
+  {value:"Gas_Top_Up",        label:"Gas Top-Up",        mpu:45},
+];
+
+// Completion form fields (photos generated dynamically per units)
+const COMP_FIELDS = [
+  {id:"units_in_home", type:"stepper", label:"Total units installed in property",
+   req:true, col:"Units_In_Home", min:1, max:99, def:1,
+   hint:"Total aircon units installed here — not just serviced today"},
+  // after photos injected dynamically
+  {id:"mould",   type:"checkbox", label:"Mould spotted on unit or filter",       req:false, col:"Mould_Spotted"},
+  {id:"gas",     type:"checkbox", label:"Unit not cooling — gas may be low",     req:false, col:"Gas_Low"},
+  {id:"cond",    type:"checkbox", label:"Outdoor condenser very dirty",          req:false, col:"Condenser_Dirty"},
+  {id:"noise",   type:"checkbox", label:"Unusual noise from unit",               req:false, col:"Notes_noise"},
+  {id:"aging",   type:"checkbox", label:"Aging unit — may need replacement",     req:false, col:"Aging_Unit"},
+  {id:"notes",   type:"textarea", label:"Notes (optional)", req:false, col:"Notes",
+   placeholder:"Gate codes, access issues, special observations..."},
+];
+
+const STAR_LABELS = ["","Poor","Below average","Okay","Good","Excellent!"];
+</script>
+
+<!-- ═══════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════ -->
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let TOKEN       = null;
+let USER_INFO   = {};
+let JOB         = null;
+let UNITS_TODAY = 1;       // units to service today (may differ from booked)
+let FORM        = {};
+let PHOTOS      = {};      // keyed by id: {blob, name, dataUrl, noPhoto}
+let CBS         = {};
+let ISSUES      = [];
+let STAR_RATING = 0;
+let NOT_PRESENT = false;
+let EVIDENCE_LATER = false;
+let ISSUE_MEDIA = [];
+let ROOT_FOLDER_ID = null;
+let ALL_JOBS    = [];
+let SEL_DATE    = null;
+let WEEK_START  = null;
+let AH_UNITS    = 1;
+let MP_YEAR     = new Date().getFullYear();
+
+// ── Core helpers ───────────────────────────────────────────────────────────────
+const pad    = n  => String(n).padStart(2,'0');
+const fmtD   = d  => { const sgt=new Date(d.getTime()+8*60*60*1000); return `${sgt.getUTCFullYear()}-${pad(sgt.getUTCMonth()+1)}-${pad(sgt.getUTCDate())}`; };
+const fmtTs  = d  => `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+const isToday= s  => s===fmtD(new Date());
+
+function goTo(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  window.scrollTo(0,0);
+}
+function humanDate(s){
+  if(isToday(s)) return 'Today';
+  const t=new Date(); t.setDate(t.getDate()+1);
+  if(s===fmtD(t)) return 'Tomorrow';
+  const dt=new Date(s+'T00:00:00');
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dt.getDay()]+' '+dt.getDate()+' '+
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()];
+}
+
+// ── Image compression ──────────────────────────────────────────────────────────
+async function compressImage(file){
+  return new Promise(resolve=>{
+    const img=new Image();
+    const url=URL.createObjectURL(file);
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      let w=img.width, h=img.height;
+      const max=CFG.MAX_PHOTO_PX;
+      if(w>max||h>max){ const r=Math.min(max/w,max/h); w=Math.round(w*r); h=Math.round(h*r); }
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      // Try quality 0.85 first, reduce until under target KB
+      let q=0.85;
+      const tryCompress=()=>{
+        canvas.toBlob(blob=>{
+          if(blob && blob.size>(CFG.MAX_PHOTO_KB*1024) && q>0.3){
+            q-=0.1; tryCompress();
+          } else {
+            resolve(blob||file);
+          }
+        },'image/jpeg',q);
+      };
+      tryCompress();
+    };
+    img.src=url;
+  });
+}
+
+// ── IndexedDB for photo storage ────────────────────────────────────────────────
+let DB=null;
+async function openDB(){
+  if(DB) return DB;
+  return new Promise((res,rej)=>{
+    const req=indexedDB.open('KoolAirconApp',1);
+    req.onupgradeneeded=e=>{ e.target.result.createObjectStore('photos',{keyPath:'id'}); };
+    req.onsuccess=e=>{ DB=e.target.result; res(DB); };
+    req.onerror=()=>rej(req.error);
+  });
+}
+async function dbSave(id,data){ const db=await openDB(); return new Promise((res,rej)=>{ const tx=db.transaction('photos','readwrite'); tx.objectStore('photos').put({id,...data}); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); }
+async function dbGet(id){ const db=await openDB(); return new Promise((res,rej)=>{ const req=db.transaction('photos').objectStore('photos').get(id); req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error); }); }
+async function dbDel(id){ const db=await openDB(); return new Promise((res,rej)=>{ const tx=db.transaction('photos','readwrite'); tx.objectStore('photos').delete(id); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); }
+async function dbClear(){ const db=await openDB(); return new Promise((res,rej)=>{ const tx=db.transaction('photos','readwrite'); tx.objectStore('photos').clear(); tx.oncomplete=res; tx.onerror=()=>rej(tx.error); }); }
+
+// ── Google Auth ────────────────────────────────────────────────────────────────
+function signIn(){
+  document.getElementById('si-status').textContent='Opening Google sign-in...';
+  google.accounts.oauth2.initTokenClient({
+    client_id: CFG.CLIENT_ID,
+    scope:     CFG.SCOPES,
+    prompt:    'select_account consent',
+    callback:  async resp=>{
+      if(resp.error){ document.getElementById('si-status').textContent='Sign-in failed — please try again.'; return; }
+      TOKEN=resp.access_token;
+      document.getElementById('si-status').textContent='Signed in! Loading...';
+      await fetchUserInfo();
+      await loadJobs();
+      goTo(1);
+    }
+  }).requestAccessToken();
+}
+
+async function fetchUserInfo(){
+  try{
+    const r=await gFetch('https://www.googleapis.com/oauth2/v3/userinfo');
+    USER_INFO=r;
+    document.getElementById('user-name').textContent=r.given_name||r.name||'Technician';
+    const av=document.getElementById('user-avatar');
+    if(r.picture){ av.src=r.picture; av.style.display='block'; } else av.style.display='none';
+  }catch(e){ document.getElementById('user-name').textContent='Technician'; }
+  const sel=document.getElementById('ah-svc');
+  SERVICE_TYPES.forEach(s=>{ const o=document.createElement('option'); o.value=s.value; o.textContent=s.label; sel.appendChild(o); });
+}
+
+// ── Google Drive API ───────────────────────────────────────────────────────────
+async function gFetch(url,opts={}){
+  const r=await fetch(url,{...opts,headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json',...(opts.headers||{})}});
+  if(!r.ok) throw new Error(`API ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+async function findOrCreateFolder(name,parentId){
+  const q=encodeURIComponent(`name='${name}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const r=await gFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)`);
+  if(r.files?.length) return r.files[0].id;
+  const c=await gFetch('https://www.googleapis.com/drive/v3/files?fields=id',{method:'POST',body:JSON.stringify({name,mimeType:'application/vnd.google-apps.folder',parents:[parentId]})});
+  return c.id;
+}
+async function getRootFolder(){
+  // Use hardcoded shared folder ID — all technicians write to the same central folder
+  if(ROOT_FOLDER_ID) return ROOT_FOLDER_ID;
+  ROOT_FOLDER_ID = CFG.DRIVE_ROOT_ID;
+  return ROOT_FOLDER_ID;
+}
+async function uploadBlob(blob,filename,folderId){
+  const form=new FormData();
+  form.append('metadata',new Blob([JSON.stringify({name:filename,parents:[folderId]})],{type:'application/json'}));
+  form.append('file',new File([blob],filename,{type:blob.type||'image/jpeg'}));
+  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{Authorization:`Bearer ${TOKEN}`},body:form});
+  if(!r.ok) throw new Error('Upload failed: '+await r.text());
+  const d=await r.json();
+  await fetch(`https://www.googleapis.com/drive/v3/files/${d.id}/permissions`,{method:'POST',headers:{Authorization:`Bearer ${TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify({role:'reader',type:'anyone'})});
+  return `https://drive.google.com/uc?export=view&id=${d.id}`;
+}
+async function writeJson(obj,filename,folderId){
+  const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+  return uploadBlob(blob,filename,folderId);
+}
+
+// ── Folder names ───────────────────────────────────────────────────────────────
+function custFolderName(job){ const cid=job.Contact_ID||'ADHOC'; const n=(job.Customer_Name||'Unknown').replace(/\s+/g,'_').replace(/[^\w-]/g,''); return `${cid}_${n}`; }
+function jobFolderName(job){ const d=fmtTs(new Date()).split('_')[0]; const s=(job.Service_Type||'Job').replace(/\s+/g,'_'); return `JOB-${d}_${s}_${UNITS_TODAY}units`; }
+
+// ── Photo name ─────────────────────────────────────────────────────────────────
+function makePhotoName(type,unit,ext){ return `${JOB.Job_ID}_${type}_Unit${unit}_${fmtTs(new Date())}.${ext||'jpg'}`; }
+
+// ── Calendar ───────────────────────────────────────────────────────────────────
+function getSunday(dt){ const d=new Date(dt); d.setDate(d.getDate()-d.getDay()); return d; }
+function renderCal(){
+  const jobMap={};
+  ALL_JOBS.forEach(j=>{ if(!jobMap[j.Date]) jobMap[j.Date]=[]; jobMap[j.Date].push(j.Time_Block); });
+  const mid=new Date(WEEK_START); mid.setDate(mid.getDate()+3);
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-btn').textContent=`${MONTHS[mid.getMonth()]} ${mid.getFullYear()}`;
+  const grid=document.getElementById('cal-grid'); grid.innerHTML='';
+  for(let i=0;i<7;i++){
+    const dt=new Date(WEEK_START); dt.setDate(dt.getDate()+i);
+    const ds=fmtD(dt); const blocks=jobMap[ds]||[];
+    const cell=document.createElement('div');
+    cell.className='cal-cell'+(isToday(ds)?' today':'')+(ds===SEL_DATE?' selected':'')+(dt.getMonth()!==mid.getMonth()?' other-month':'');
+    cell.onclick=()=>selectDate(ds);
+    const de=document.createElement('div'); de.className='cal-date'; de.textContent=dt.getDate();
+    cell.appendChild(de);
+    if(blocks.length){ const dots=document.createElement('div'); dots.className='cal-dots'; [...new Set(blocks)].slice(0,3).forEach(b=>{ const dot=document.createElement('div'); dot.className='cal-dot '+(b==='AM'?'dot-am':b==='PM'?'dot-pm':'dot-ot'); dots.appendChild(dot); }); cell.appendChild(dots); }
+    grid.appendChild(cell);
+  }
+}
+function selectDate(ds){ SEL_DATE=ds; renderCal(); renderJobs(); }
+function shiftWeek(d){ WEEK_START.setDate(WEEK_START.getDate()+(d*7)); renderCal(); }
+function renderJobs(){
+  const jobs=ALL_JOBS.filter(j=>j.Date===SEL_DATE);
+  document.getElementById('sel-date-lbl').textContent=humanDate(SEL_DATE);
+  document.getElementById('sel-count').textContent=`${jobs.length} job${jobs.length!==1?'s':''}`;
+  const list=document.getElementById('job-list');
+  if(!jobs.length){ list.innerHTML=`<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">No jobs on ${humanDate(SEL_DATE)}</div><div class="empty-sub">Use the adhoc section below for unscheduled jobs.</div></div>`; return; }
+  list.innerHTML=jobs.map(job=>{
+    const i=ALL_JOBS.indexOf(job);
+    const svc=SERVICE_TYPES.find(s=>s.value===job.Service_Type)?.label||job.Service_Type;
+    const bc=job.Time_Block==='AM'?'bam':job.Time_Block==='PM'?'bpm':'bot';
+    const mapsUrl=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.Address+' Singapore '+job.Postal_Code)}`;
+    return `<div class="job-card" onclick="selectJob(${i})">
+      <div class="jc-top"><div class="jc-name">${job.Customer_Name}</div><span class="jc-badge ${bc}">${job.Time_Block} ${job.Block_Start}</span></div>
+      <div class="jc-row">🔧 ${svc} · ${job.Units} unit${job.Units>1?'s':''}</div>
+      <div class="jc-addr" onclick="event.stopPropagation();window.open('${mapsUrl}','_blank')">📍 ${job.Address}</div>
+      <div class="jc-dur">⏱ ${job.Duration_Mins} mins &nbsp;·&nbsp; <span style="opacity:.6;font-size:11px">${job.Job_ID}</span></div>
+      ${job.Notes?`<div class="jc-note"><strong>Note:</strong> ${job.Notes}</div>`:''}
+      <span class="sp">${job.Status}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Month picker ───────────────────────────────────────────────────────────────
+function openMonthPicker(){
+  MP_YEAR=new Date(WEEK_START).getFullYear();
+  renderMonthPicker();
+  document.getElementById('month-picker').classList.add('open');
+}
+function closeMonthPicker(){ document.getElementById('month-picker').classList.remove('open'); }
+function mpYearStep(d){ MP_YEAR+=d; renderMonthPicker(); }
+function renderMonthPicker(){
+  document.getElementById('mp-year').textContent=MP_YEAR;
+  const curMid=new Date(WEEK_START); curMid.setDate(curMid.getDate()+3);
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('mp-months').innerHTML=MONTHS.map((m,i)=>{
+    const isActive=MP_YEAR===curMid.getFullYear()&&i===curMid.getMonth();
+    return `<div class="mp-month${isActive?' active':''}" onclick="mpSelectMonth(${i})">${m}</div>`;
+  }).join('');
+}
+function mpSelectMonth(month){
+  const dt=new Date(MP_YEAR,month,1);
+  WEEK_START=getSunday(dt);
+  // Select first day of that month
+  SEL_DATE=fmtD(dt);
+  closeMonthPicker();
+  renderCal();
+  renderJobs();
+}
+function mpGoToday(){
+  const today=new Date();
+  WEEK_START=getSunday(today);
+  SEL_DATE=fmtD(today);
+  closeMonthPicker();
+  renderCal();
+  renderJobs();
+}
+
+// ── Adhoc ──────────────────────────────────────────────────────────────────────
+let ahOpen=false;
+function toggleAdhoc(){ ahOpen=!ahOpen; document.getElementById('adhoc-body').classList.toggle('open',ahOpen); document.getElementById('adhoc-icon').classList.toggle('open',ahOpen); }
+function ahStep(d){ AH_UNITS=Math.max(1,Math.min(99,AH_UNITS+d)); document.getElementById('ah-units').textContent=AH_UNITS; }
+function startAdhoc(){
+  const name=document.getElementById('ah-name').value.trim();
+  const addr=document.getElementById('ah-addr').value.trim();
+  const post=document.getElementById('ah-post').value.trim();
+  const svc=document.getElementById('ah-svc').value;
+  if(!name||!addr||!post||!svc){ alert('Please fill in all required fields.'); return; }
+  const mpu=SERVICE_TYPES.find(s=>s.value===svc)?.mpu||30;
+  JOB={Job_ID:`JOB-ADHOC-${fmtTs(new Date()).split('_')[0]}-${Math.floor(Math.random()*900)+100}`,
+       Contact_ID:'',Customer_Name:name,Address:addr,Postal_Code:post,
+       Service_Type:svc,Units:AH_UNITS,Duration_Mins:mpu*AH_UNITS,
+       Time_Block:'ADHOC',Block_Start:'',Status:'Adhoc',Notes:'',
+       Phone:document.getElementById('ah-phone').value.trim(),Date:fmtD(new Date()),is_adhoc:true};
+  loadJobStart(); goTo(2);
+}
+
+// ── Select job ─────────────────────────────────────────────────────────────────
+function selectJob(i){ JOB={...ALL_JOBS[i],is_adhoc:false}; loadJobStart(); goTo(2); }
+
+// ── Job start ──────────────────────────────────────────────────────────────────
+function loadJobStart(){
+  FORM={}; PHOTOS={}; CBS={}; ISSUES=[]; STAR_RATING=0; NOT_PRESENT=false;
+  UNITS_TODAY=parseInt(JOB.Units)||1;
+  document.getElementById('units-to-service').textContent=UNITS_TODAY;
+  document.getElementById('s2-sub').textContent=JOB.Customer_Name;
+  document.getElementById('s3-sub').textContent=JOB.Customer_Name;
+  const svc=SERVICE_TYPES.find(s=>s.value===JOB.Service_Type)?.label||JOB.Service_Type;
+  const mapsUrl=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(JOB.Address+' Singapore '+JOB.Postal_Code)}`;
+  document.getElementById('s2-info').innerHTML=`
+    <div class="ic-title">Job Details</div>
+    <div class="ic-row"><span class="ic-lbl">Customer</span><span class="ic-val">${JOB.Customer_Name}</span></div>
+    <div class="ic-row"><span class="ic-lbl">Address</span><span class="ic-link" onclick="window.open('${mapsUrl}','_blank')">📍 ${JOB.Address} →</span></div>
+    <div class="ic-row"><span class="ic-lbl">Service</span><span class="ic-val">${svc} · ${JOB.Units} unit${JOB.Units>1?'s':''}</span></div>
+    <div class="ic-row"><span class="ic-lbl">Est. time</span><span class="ic-val">${JOB.Duration_Mins} mins</span></div>
+    <div class="ic-row"><span class="ic-lbl">Job ID</span><span class="ic-val ic-mono">${JOB.Job_ID}${JOB.is_adhoc?' (ADHOC)':''}</span></div>`;
+  renderBeforePhotos();
+}
+
+function changeUnitsToService(d){
+  UNITS_TODAY=Math.max(1,Math.min(99,UNITS_TODAY+d));
+  document.getElementById('units-to-service').textContent=UNITS_TODAY;
+  renderBeforePhotos();
+}
+
+function renderBeforePhotos(){
+  const wrap=document.getElementById('before-photos-wrap');
+  let html='';
+  for(let u=1;u<=UNITS_TODAY;u++){
+    const id=`bp${u}`;
+    const existing=PHOTOS[id];
+    html+=`<div class="fw" id="fw-${id}">
+      <div class="flbl"><span class="req-dot"></span>Before Photo — Unit ${u}</div>`;
+    if(existing&&!existing.noPhoto){
+      html+=`<div class="photo-area done" id="${id}-area">
+        <img src="${existing.dataUrl}" class="photo-preview" style="display:block" alt="">
+      </div>
+      <div class="photo-actions">
+        <button class="photo-action-btn btn-retake" onclick="triggerPhotoEl('${id}-input')">📷 Retake</button>
+        <button class="photo-action-btn btn-delete" onclick="deletePhoto('${id}')">🗑 Delete</button>
+      </div>
+      <div class="photo-info">📁 ${existing.name}</div>`;
+    } else {
+      html+=`<div class="photo-area" onclick="triggerPhotoEl('${id}-input')" id="${id}-area">
+        <div class="photo-icon">📷</div>
+        <div class="photo-lbl">Tap to take photo</div>
+      </div>`;
+    }
+    html+=`<input type="file" accept="image/*" capture="environment" id="${id}-input" style="display:none" onchange="handleBeforePhoto(this,'${id}')">`;
+    // "No photo available" option
+    const nph=existing?.noPhoto;
+    html+=`<div class="no-photo-row" onclick="toggleNoPhoto('${id}')">
+      <div class="no-photo-cb${nph?' chk':''}" id="${id}-nocb">${nph?'✓':''}</div>
+      <div class="no-photo-txt" style="font-size:12px">No photo available for this unit (access issue, etc.)</div>
+    </div></div>`;
+  }
+  wrap.innerHTML=html;
+}
+
+function triggerPhotoEl(id){ document.getElementById(id)?.click(); }
+
+async function handleBeforePhoto(input,id){
+  if(!input.files||!input.files[0]) return;
+  const file=input.files[0];
+  const ext=file.name.split('.').pop().toLowerCase()||'jpg';
+  const unitN=id.replace('bp','');
+  const fname=makePhotoName('BEFORE',unitN,ext);
+  showOv('Compressing photo...','');
+  const compressed=await compressImage(file);
+  hideOv();
+  const dataUrl=await blobToDataUrl(compressed);
+  PHOTOS[id]={blob:compressed,name:fname,dataUrl,noPhoto:false};
+  await dbSave(id,{blob:compressed,name:fname,dataUrl});
+  renderBeforePhotos();
+  updateArriveBtn();
+}
+
+function deletePhoto(id){ delete PHOTOS[id]; dbDel(id); renderBeforePhotos(); if(id.startsWith('after')) updateProgress(); else updateArriveBtn(); }
+
+function toggleNoPhoto(id){
+  const existing=PHOTOS[id]||{};
+  const wasNoPhoto=existing.noPhoto;
+  if(!wasNoPhoto){ PHOTOS[id]={noPhoto:true,name:`${id}_NO_PHOTO`,dataUrl:null,blob:null}; }
+  else { delete PHOTOS[id]; }
+  renderBeforePhotos();
+  updateArriveBtn();
+}
+
+function updateArriveBtn(){
+  const btn=document.getElementById('arrive-btn');
+  // All units must have photo OR noPhoto flag
+  const allReady=Array.from({length:UNITS_TODAY},(_,i)=>i+1).every(u=>PHOTOS[`bp${u}`]);
+  btn.disabled=!allReady;
+}
+
+function blobToDataUrl(blob){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(blob); }); }
+
+function markArrived(){
+  const btn=document.getElementById('arrive-btn');
+  if(btn.disabled){ alert('Please take a before photo (or mark as unavailable) for each unit.'); return; }
+  FORM.Arrived_At=new Date().toISOString();
+  FORM.Units_Serviced=UNITS_TODAY;
+  renderCompletionForm();
+  goTo(3);
+}
+
+// ── Completion form ────────────────────────────────────────────────────────────
+function renderCompletionForm(){
+  const wrap=document.getElementById('s3-form');
+  let html='';
+  // Units in home stepper
+  const f0=COMP_FIELDS[0];
+  html+=`<div class="fw"><div class="flbl"><span class="req-dot"></span>${f0.label}</div><div class="fhint">${f0.hint}</div>
+    <div class="stepper-wrap"><div class="stepper">
+      <button class="step-btn" onclick="stepF('${f0.id}','${f0.col}',-1,${f0.min},${f0.max})">−</button>
+      <div class="step-val" id="sv-${f0.id}">${UNITS_TODAY}</div>
+      <button class="step-btn" onclick="stepF('${f0.id}','${f0.col}',1,${f0.min},${f0.max})">+</button>
+    </div><span class="step-unit">units</span></div></div>`;
+  FORM[f0.col]=UNITS_TODAY;
+
+  // After photos — one per unit serviced
+  html+=`<div class="sec">After Photos</div>
+    <div class="alert al-info" style="margin-bottom:12px;font-size:12px">One photo per unit after cleaning. These are sent to the customer.</div>`;
+  for(let u=1;u<=UNITS_TODAY;u++){
+    const id=`after_${u}`;
+    const ex=PHOTOS[id];
+    html+=`<div class="fw"><div class="flbl"><span class="req-dot"></span>After Photo — Unit ${u}</div>`;
+    if(ex&&!ex.noPhoto){
+      html+=`<div class="photo-area done">
+        <img src="${ex.dataUrl}" class="photo-preview" style="display:block" alt=""></div>
+        <div class="photo-actions">
+          <button class="photo-action-btn btn-retake" onclick="triggerPhotoEl('${id}-inp')">📷 Retake</button>
+          <button class="photo-action-btn btn-delete" onclick="deletePhoto('${id}')">🗑 Delete</button>
+        </div>
+        <div class="photo-info">📁 ${ex.name}</div>`;
+    } else {
+      html+=`<div class="photo-area" onclick="triggerPhotoEl('${id}-inp')" id="${id}-area"><div class="photo-icon">📷</div><div class="photo-lbl">Tap to take photo</div></div>`;
+    }
+    html+=`<input type="file" accept="image/*" capture="environment" id="${id}-inp" style="display:none" onchange="handleAfterPhoto(this,'${id}',${u})">`;
+    const nph=ex?.noPhoto;
+    html+=`<div class="no-photo-row" onclick="toggleNoPhoto('${id}')">
+      <div class="no-photo-cb${nph?' chk':''}" id="${id}-nocb">${nph?'✓':''}</div>
+      <div class="no-photo-txt" style="font-size:12px">Not able to take photo</div>
+    </div></div>`;
+  }
+
+  // Condition flags
+  html+=`<div class="sec">Condition Flags</div>
+    <div class="alert al-info" style="margin-bottom:10px;font-size:12px">Tick anything you noticed. Each one alerts the operator.</div>`;
+  COMP_FIELDS.filter(f=>f.type==='checkbox').forEach(f=>{
+    html+=`<div class="cb-item" id="cb-${f.id}" onclick="togCb('${f.id}','${f.col}')">
+      <div class="cb-box" id="cbbox-${f.id}"></div><span class="cb-txt">${f.label}</span></div>`;
+  });
+
+  // Notes
+  const fn=COMP_FIELDS.find(f=>f.id==='notes');
+  html+=`<div class="sec">Notes</div>
+    <div class="fw"><textarea class="ta" id="notes-ta" placeholder="${fn.placeholder}" oninput="FORM['${fn.col}']=this.value;updateProgress()"></textarea></div>`;
+
+  wrap.innerHTML=html;
+  updateProgress();
+}
+
+async function handleAfterPhoto(input,id,unitN){
+  if(!input.files||!input.files[0]) return;
+  const file=input.files[0];
+  const ext=file.name.split('.').pop().toLowerCase()||'jpg';
+  const fname=makePhotoName('AFTER',unitN,ext);
+  showOv('Compressing photo...','');
+  const compressed=await compressImage(file);
+  hideOv();
+  const dataUrl=await blobToDataUrl(compressed);
+  PHOTOS[id]={blob:compressed,name:fname,dataUrl,noPhoto:false};
+  await dbSave(id,{blob:compressed,name:fname,dataUrl});
+  renderCompletionForm();
+  updateProgress();
+}
+
+function stepF(id,col,d,mn,mx){ const el=document.getElementById('sv-'+id); let v=parseInt(el.textContent)+d; v=Math.max(mn,Math.min(mx,v)); el.textContent=v; FORM[col]=v; updateProgress(); }
+function togCb(id,col){ CBS[id]=!CBS[id]; document.getElementById('cb-'+id).classList.toggle('chk',CBS[id]); document.getElementById('cbbox-'+id).textContent=CBS[id]?'✓':''; FORM[col]=CBS[id]?'TRUE':'FALSE'; updateProgress(); }
+
+function updateProgress(){
+  // Required: at least one after photo (or noPhoto flag) per unit
+  const reqPhotos=Array.from({length:UNITS_TODAY},(_,i)=>`after_${i+1}`);
+  const photosDone=reqPhotos.every(id=>PHOTOS[id]);
+  const total=reqPhotos.length+1; // photos + units_in_home (always filled)
+  const filled=reqPhotos.filter(id=>PHOTOS[id]).length+1;
+  const pct=Math.round(filled/total*100);
+  document.getElementById('prog-bar').style.width=pct+'%';
+  document.getElementById('s3-prog').textContent=`${filled}/${total}`;
+  document.getElementById('submit-btn').disabled=!photosDone;
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────────
+async function submitJob(){
+  // Prevent double-submission
+  const submitBtn = document.getElementById('submit-btn');
+  if(submitBtn.dataset.submitting === 'true') return;
+  submitBtn.dataset.submitting = 'true';
+  submitBtn.disabled = true;
+  submitBtn.textContent = '⏳ Uploading...';
+  // Show upload progress overlay
+  const ulOverlay=document.getElementById('upload-overlay');
+  const ulList=document.getElementById('ul-list');
+  document.getElementById('ul-title').textContent='Uploading to Google Drive';
+  document.getElementById('ul-sub').textContent='Please keep the app open';
+  ulOverlay.classList.add('show');
+
+  const allPhotos=Object.entries(PHOTOS).filter(([,v])=>v.blob&&!v.noPhoto);
+  const issuePhotos=ISSUES.flatMap(i=>i.media||[]);
+  const total=allPhotos.length+issuePhotos.length+2; // +META +SUBMIT
+  let done=0;
+
+  function addItem(name){ const li=document.createElement('div'); li.className='upload-item'; li.id='uli-'+name.replace(/\W/g,''); li.innerHTML=`<div class="ui-spinner"></div><div class="ui-name">${name}</div>`; ulList.appendChild(li); }
+  function doneItem(name){ const el=document.getElementById('uli-'+name.replace(/\W/g,'')); if(el){ el.querySelector('.ui-spinner').outerHTML='<div class="ui-done">✓</div>'; } done++; document.getElementById('ul-sub').textContent=`${done} of ${total} items uploaded`; }
+
+  allPhotos.forEach(([,v])=>addItem(v.name));
+  addItem('Job record (META)');
+  addItem('Completion data (SUBMIT)');
+
+  try{
+    const rootId=await getRootFolder();
+    const custId=await findOrCreateFolder(custFolderName(JOB),rootId);
+    const jobId=await findOrCreateFolder(jobFolderName(JOB),custId);
+
+    // Upload all photos in parallel
+    const photoUrls={};
+    await Promise.all(allPhotos.map(async([id,v])=>{
+      const url=await uploadBlob(v.blob,v.name,jobId);
+      photoUrls[id]=url;
+      doneItem(v.name);
+    }));
+
+    // Upload issue media
+    if(issuePhotos.length){
+      const issueFolder=await findOrCreateFolder(`Issues`,jobId);
+      await Promise.all(issuePhotos.map(async(m,i)=>{
+        const fname=`${JOB.Job_ID}_ISSUE_${String(i+1).padStart(2,'0')}_${fmtTs(new Date())}.${m.ext}`;
+        addItem(fname);
+        await uploadBlob(m.blob,fname,issueFolder);
+        doneItem(fname);
+      }));
+    }
+
+    // Write META
+    const meta={Job_ID:JOB.Job_ID,Contact_ID:JOB.Contact_ID||'',Customer_Name:JOB.Customer_Name,
+      Address:JOB.Address,Postal_Code:JOB.Postal_Code,Service_Type:JOB.Service_Type,
+      Units_Booked:JOB.Units,Units_Serviced:UNITS_TODAY,Arrived_At:FORM.Arrived_At||'',
+      Before_Photos:Object.fromEntries(Object.entries(PHOTOS).filter(([k])=>k.startsWith('bp')).map(([k,v])=>[k,v.noPhoto?'NO_PHOTO':photoUrls[k]||'']))};
+    await writeJson(meta,`${JOB.Job_ID}_META_${fmtTs(new Date())}.json`,jobId);
+    doneItem('Job record (META)');
+
+    // Write SUBMIT
+    const afterPhotos=Object.fromEntries(Object.entries(PHOTOS).filter(([k])=>k.startsWith('after')).map(([k,v])=>[k,v.noPhoto?'NO_PHOTO':photoUrls[k]||'']));
+    const submit={
+      Sub_ID:`SUB-${fmtTs(new Date())}`,Job_ID:JOB.Job_ID,Contact_ID:JOB.Contact_ID||'',
+      Customer_Name:JOB.Customer_Name,Service_Type:JOB.Service_Type,
+      Units_Booked:JOB.Units,Units_Serviced:UNITS_TODAY,Is_Adhoc:JOB.is_adhoc||false,
+      Arrived_At:FORM.Arrived_At||'',Completed_At:new Date().toISOString(),
+      Units_In_Home:FORM['Units_In_Home']||UNITS_TODAY,
+      After_Photos:afterPhotos,
+      Mould_Spotted:FORM['Mould_Spotted']||'FALSE',Gas_Low:FORM['Gas_Low']||'FALSE',
+      Condenser_Dirty:FORM['Condenser_Dirty']||'FALSE',
+      Aging_Unit:FORM['Aging_Unit']||'FALSE',Notes:FORM['Notes']||'',
+      Issues:ISSUES,
+      _trigger_upsell:UNITS_TODAY<(parseInt(JOB.Units)||1),
+      _trigger_escalation:false, // escalation now comes from star rating
+      _trigger_mould:FORM['Mould_Spotted']==='TRUE',
+      _trigger_gas:FORM['Gas_Low']==='TRUE',
+      _trigger_condenser:FORM['Condenser_Dirty']==='TRUE',
+      _trigger_aging:FORM['Aging_Unit']==='TRUE',
+      _issues_evidence_pending:ISSUES.some(i=>i.evidence_later),
+    };
+    await writeJson(submit,`${JOB.Job_ID}_SUBMIT_${fmtTs(new Date())}.json`,jobId);
+    doneItem('Completion data (SUBMIT)');
+
+    await dbClear();
+    ulOverlay.classList.remove('show');
+    loadS4();
+    goTo(4);
+
+  }catch(err){
+    ulOverlay.classList.remove('show');
+    console.error('Submit error:',err);
+    alert('Upload failed. Please check your internet connection and try again. Your photos are saved on the device.');
+  }
+}
+
+// ── Screen 4 ───────────────────────────────────────────────────────────────────
+function loadS4(){
+  STAR_RATING=0; NOT_PRESENT=false;
+  // Reset stars
+  document.querySelectorAll('.star').forEach(s=>{s.textContent='☆';s.classList.remove('lit');});
+  document.getElementById('star-lbl').textContent='Tap a star';
+  document.getElementById('qr-section').style.display='none';
+  document.getElementById('not-present-row').classList.remove('chk');
+  document.getElementById('np-box').textContent='';
+  document.getElementById('customer-present-section').style.display='block';
+  // QR
+  if(CFG.GOOGLE_REVIEW_URL!=='https://g.page/r/REPLACE_ME'){
+    document.getElementById('qr-box').innerHTML=`<img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(CFG.GOOGLE_REVIEW_URL)}" width="220" height="220" style="border-radius:12px" alt="QR">`;
+  }
+}
+
+function rateStar(n){
+  STAR_RATING=n;
+  document.querySelectorAll('.star').forEach((s,i)=>{
+    s.textContent=i<n?'⭐':'☆'; s.classList.toggle('lit',i<n);
+  });
+  document.getElementById('star-lbl').textContent=STAR_LABELS[n]||'';
+  // Show QR only for 4+ stars
+  document.getElementById('qr-section').style.display=n>=4?'block':'none';
+  if(n<4&&n>0){
+    document.getElementById('qr-section').style.display='none';
+  }
+}
+
+function toggleNotPresent(){
+  NOT_PRESENT=!NOT_PRESENT;
+  document.getElementById('not-present-row').classList.toggle('chk',NOT_PRESENT);
+  document.getElementById('np-box').textContent=NOT_PRESENT?'✓':'';
+  document.getElementById('customer-present-section').style.display=NOT_PRESENT?'none':'block';
+}
+
+function handleReviewPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const area=document.getElementById('review-photo-area');
+    area.classList.add('done');
+    area.querySelector('.photo-icon').style.display='none';
+    area.querySelector('.photo-lbl').textContent='✓ Review photo taken';
+    const prev=document.getElementById('review-photo-preview');
+    prev.src=e.target.result; prev.style.display='block';
+  };
+  reader.readAsDataURL(input.files[0]);
+  PHOTOS['review_confirmation']={file:input.files[0],name:`${JOB.Job_ID}_REVIEW_CONFIRMATION_${fmtTs(new Date())}.jpg`};
+}
+
+async function finishJob(){
+  const finishBtn = document.getElementById('finish-btn');
+  if(finishBtn.dataset.finishing === 'true') return;
+  finishBtn.dataset.finishing = 'true';
+  finishBtn.disabled = true;
+  // Append rating and not_present to a final update JSON — write to Drive
+  // This is a lightweight "RATING" file OpenClaw picks up
+  try{
+    const rootId=await getRootFolder();
+    const custId=await findOrCreateFolder(custFolderName(JOB),rootId);
+    const jobId=await findOrCreateFolder(jobFolderName(JOB),custId);
+    const ratingData={
+      Job_ID:JOB.Job_ID,
+      Star_Rating:STAR_RATING,
+      Customer_Not_Present:NOT_PRESENT,
+      Review_Photo_Taken:!!(PHOTOS['review_confirmation']),
+      _send_review_whatsapp:NOT_PRESENT,
+      _google_review_given:!!(PHOTOS['review_confirmation']),
+      _trigger_discount_if_reviewed:!!(PHOTOS['review_confirmation']),
+    };
+    // Upload review photo if taken
+    if(PHOTOS['review_confirmation']?.file){
+      const compressed=await compressImage(PHOTOS['review_confirmation'].file);
+      const url=await uploadBlob(compressed,PHOTOS['review_confirmation'].name,jobId);
+      ratingData.Review_Photo_URL=url;
+    }
+    await writeJson(ratingData,`${JOB.Job_ID}_RATING_${fmtTs(new Date())}.json`,jobId);
+  }catch(e){ console.error('Rating save error:',e); }
+  resetHome();
+}
+
+function resetHome(){
+  JOB=null;FORM={};PHOTOS={};CBS={};ISSUES=[];STAR_RATING=0;NOT_PRESENT=false;AH_UNITS=1;
+  ['ah-name','ah-addr','ah-post','ah-phone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ah-svc').value='';
+  document.getElementById('ah-units').textContent='1';
+  if(ahOpen) toggleAdhoc();
+  goTo(1);
+}
+
+// ── Issue reporting ────────────────────────────────────────────────────────────
+let issueSheetContext='';
+function openIssue(ctx){
+  issueSheetContext=ctx;
+  renderIssueList();
+  document.getElementById('issue-sheet').classList.add('open');
+}
+function closeIssue(){ document.getElementById('issue-sheet').classList.remove('open'); }
+function toggleEvidenceLater(){
+  EVIDENCE_LATER=!EVIDENCE_LATER;
+  const cb=document.getElementById('evidence-later-cb');
+  cb.classList.toggle('chk',EVIDENCE_LATER);
+  cb.textContent=EVIDENCE_LATER?'✓':'';
+}
+function handleIssueMedia(input){
+  if(!input.files) return;
+  const previews=document.getElementById('issue-media-previews');
+  Array.from(input.files).forEach(file=>{
+    const ext=file.name.split('.').pop().toLowerCase()||'jpg';
+    const isVid=file.type.startsWith('video');
+    const reader=new FileReader();
+    reader.onload=e=>{
+      ISSUE_MEDIA.push({blob:file,dataUrl:e.target.result,ext,isVideo:isVid});
+      const div=document.createElement('div');
+      div.style.cssText='width:64px;height:64px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#e8edf3;display:flex;align-items:center;justify-content:center;font-size:28px';
+      div.innerHTML=isVid?'🎥':`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+      previews.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+  const area=document.getElementById('issue-media-area');
+  area.querySelector('.photo-lbl').textContent=`${ISSUE_MEDIA.length} file(s) attached`;
+}
+function addIssue(){
+  const type=document.getElementById('issue-type').value;
+  const desc=document.getElementById('issue-desc').value.trim();
+  if(!type){ alert('Please select an issue type.'); return; }
+  ISSUES.push({id:`ISS-${Date.now()}`,type,description:desc,context:issueSheetContext,
+    media:ISSUE_MEDIA.slice(),evidence_later:EVIDENCE_LATER,timestamp:new Date().toISOString()});
+  // Reset
+  document.getElementById('issue-type').value='';
+  document.getElementById('issue-desc').value='';
+  document.getElementById('issue-media-previews').innerHTML='';
+  document.getElementById('issue-media-area').querySelector('.photo-lbl').textContent='Attach photo or video';
+  ISSUE_MEDIA=[]; EVIDENCE_LATER=false;
+  document.getElementById('evidence-later-cb').classList.remove('chk');
+  document.getElementById('evidence-later-cb').textContent='';
+  renderIssueList();
+  updateIssueCount();
+}
+function renderIssueList(){
+  const list=document.getElementById('issue-list');
+  if(!ISSUES.length){ list.innerHTML='<div class="empty" style="padding:16px 0"><div class="empty-sub">No issues reported yet</div></div>'; return; }
+  list.innerHTML=ISSUES.map((iss,i)=>`
+    <div class="alert al-danger" style="margin-bottom:8px">
+      <strong>${iss.type.replace(/_/g,' ')} ${iss.evidence_later?'⏳':''}${iss.media?.length?'📎':''}</strong>
+      ${iss.description||'No description'}
+      <div style="font-size:11px;margin-top:4px;opacity:.7">${new Date(iss.timestamp).toLocaleTimeString()}</div>
+    </div>`).join('');
+}
+function updateIssueCount(){
+  const n=ISSUES.length;
+  // Update all three screen badges
+  ['s2','s3','s4'].forEach(sid=>{
+    const badge=document.getElementById(`fab-badge-${sid}`);
+    if(!badge) return;
+    if(n>0){ badge.textContent=n; badge.style.display='flex'; }
+    else badge.style.display='none';
+  });
+  const cnt=document.getElementById('issue-count');
+  if(cnt){ if(n){ cnt.textContent=n; cnt.style.display='inline'; } else cnt.style.display='none'; }
+}
+
+// ── Overlay helpers ────────────────────────────────────────────────────────────
+function showOv(title,sub){ const ov=document.getElementById('overlay'); document.getElementById('ov-spinner').style.display='block'; document.getElementById('ov-icon').style.display='none'; document.getElementById('ov-title').textContent=title; document.getElementById('ov-sub').textContent=sub; ov.classList.add('show'); }
+function hideOv(){ document.getElementById('overlay').classList.remove('show'); }
+
+// ── Load jobs from Google Calendar ────────────────────────────────────────────
+// Reads from "KoolAircon Technician" calendar for the next 14 days.
+async function loadJobs(){
+  const jobList = document.getElementById('job-list');
+  jobList.innerHTML = '<div class="empty"><div class="empty-icon">⏳</div><div class="empty-title">Loading jobs...</div></div>';
+
+  try {
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    const future = new Date(); future.setDate(future.getDate()+14);
+    const params = new URLSearchParams({
+      timeMin:      todayStart.toISOString(),
+      timeMax:      future.toISOString(),
+      singleEvents: 'true',
+      orderBy:      'startTime',
+      maxResults:   '100',
+    });
+
+    // Go directly to hardcoded calendar ID — no calendarList lookup
+    const calId = encodeURIComponent(CFG.CALENDAR_ID);
+    const url   = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?${params}`;
+    const res   = await gFetch(url);
+    const events = res.items || [];
+
+    // Show count on screen for debugging
+    jobList.innerHTML = `<div class="alert al-info" style="margin:16px;font-size:12px">
+      📅 Fetched ${events.length} event(s) from calendar
+    </div>`;
+
+    ALL_JOBS = events
+      .filter(e => e.start && (e.start.dateTime || e.start.date))
+      .map(e => {
+        const parts  = (e.description||'').split('---');
+        const meta   = parts.length > 1 ? parts[parts.length-1] : (e.description||'');
+        const parse  = key => { const m = meta.match(new RegExp(`^${key}:\\s*(.+)$`,'mi')); return m?m[1].trim():''; };
+        const start  = new Date(e.start.dateTime || e.start.date);
+        const end    = new Date(e.end?.dateTime || e.end?.date || start);
+        // Convert to SGT (UTC+8) for correct date and time block
+        const startSGT = new Date(start.getTime() + 8 * 60 * 60 * 1000);
+        const hour   = startSGT.getUTCHours();
+        const block  = hour < 12 ? 'AM' : hour < 18 ? 'PM' : 'OT';
+        const mins   = Math.round((end - start) / 60000);
+        const dateSGT = `${startSGT.getUTCFullYear()}-${String(startSGT.getUTCMonth()+1).padStart(2,'0')}-${String(startSGT.getUTCDate()).padStart(2,'0')}`;
+        const blockStart = `${String(hour).padStart(2,'0')}:${String(startSGT.getUTCMinutes()).padStart(2,'0')}`;
+        const jobId  = parse('job_id') || `CAL-${e.id?.slice(-6)}`;
+        const svcType= normaliseService(parse('service')) || guessServiceType(e.summary||'');
+        const units  = parseInt(parse('units')) || guessUnits(e.summary||'');
+        const titleParts = (e.summary||'').split('—').map(s=>s.trim());
+        const custName   = titleParts.length >= 2 ? titleParts[1] : (e.summary||'Calendar Event');
+        return {
+          Job_ID:        jobId,
+          Contact_ID:    parse('contact_id') || '',
+          Customer_Name: custName,
+          Address:       parse('address')    || e.location || '',
+          Postal_Code:   parse('postal')     || '',
+          Phone:         parse('phone')      || '',
+          Service_Type:  svcType,
+          Units:         units,
+          Duration_Mins: mins || (units * (SERVICE_TYPES.find(s=>s.value===svcType)?.mpu||30)),
+          Time_Block:    block,
+          Block_Start:   blockStart,
+          Status:        'Scheduled',
+          Notes:         parse('notes') || '',
+          Date:          dateSGT,
+          _calEventId:   e.id,
+          _calendarId:   CFG.CALENDAR_ID,
+        };
+      })
+      .filter(j => j.Customer_Name && j.Date);
+
+  } catch(err) {
+    console.error('[loadJobs] Error:', err);
+    document.getElementById('job-list').innerHTML =
+      `<div class="alert al-danger" style="margin:16px">
+        <strong>Calendar error</strong><br>${err.message}
+      </div>`;
+    ALL_JOBS = [];
+  }
+
+  SEL_DATE   = fmtD(new Date());
+  WEEK_START = getSunday(new Date());
+  renderCal();
+  renderJobs();
+}
+
+// Map OpenClaw short service codes to app SERVICE_TYPES values
+function normaliseService(raw) {
+  if (!raw) return '';
+  const r = raw.toLowerCase().trim();
+  if (r === 'gc' || r === 'general' || r.includes('general')) return 'General_Service';
+  if (r === 'cw' || r.includes('chemical wash') || r.includes('wash')) return 'Chemical_Wash';
+  if (r === 'co' || r.includes('overhaul'))    return 'Chemical_Overhaul';
+  if (r === 'gas' || r.includes('gas'))        return 'Gas_Top_Up';
+  if (r.includes('install'))                   return 'Installation';
+  if (r.includes('repair'))                    return 'Repair';
+  if (r.includes('condenser'))                 return 'Condenser_Service';
+  return 'General_Service';
+}
+// Helper: guess service type from event title keywords
+function guessServiceType(title) {
+  const t = title.toLowerCase();
+  if (t.includes('overhaul') || t.includes('chemical o')) return 'Chemical_Overhaul';
+  if (t.includes('chemical') || t.includes('wash'))       return 'Chemical_Wash';
+  if (t.includes('gas'))                                  return 'Gas_Top_Up';
+  if (t.includes('install'))                              return 'Installation';
+  if (t.includes('repair'))                               return 'Repair';
+  if (t.includes('condenser'))                            return 'Condenser_Service';
+  return 'General_Service';
+}
+// Helper: guess units from event title (looks for a number before "unit")
+function guessUnits(title) {
+  const m = title.match(/(\d+)\s*x?\s*unit/i) || title.match(/(\d+)\s*unit/i);
+  return m ? parseInt(m[1]) : 1;
+}
+
+window.onload=()=>{ updateArriveBtn&&null; };
+</script>
+</body>
+</html>

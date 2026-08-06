@@ -246,6 +246,15 @@ html,body{height:100%;height:100dvh;font-family:-apple-system,BlinkMacSystemFont
 .radio-item.sel .radio-dot{display:block}
 .radio-txt{font-size:14px}
 
+/* ── Payment method segmented control ── */
+.pm-row{display:flex;gap:8px}
+.pm-opt{flex:1;text-align:center;padding:12px 8px;border:1.5px solid var(--ltgray);
+  border-radius:10px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;transition:all .15s}
+.pm-opt:hover{border-color:var(--teal)}
+.pm-opt.sel{background:var(--teal);border-color:var(--teal);color:#fff}
+.invoice-card{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.invoice-card .btn{width:auto;flex:none;padding:10px 16px;text-decoration:none;display:inline-block}
+
 /* ── Textarea/Input ── */
 .ta,.txt-input,.sel-input{width:100%;border:1.5px solid var(--ltgray);
   border-radius:var(--r);padding:12px 14px;font-size:14px;font-family:inherit;transition:border .15s}
@@ -1091,8 +1100,71 @@ function renderCompletionForm(){
   html+=`<div class="sec">Notes</div>
     <div class="fw"><textarea class="ta" id="notes-ta" placeholder="${fn.placeholder}" oninput="FORM['${fn.col}']=this.value;updateProgress()"></textarea></div>`;
 
+  // Payment — show the invoice (PayNow QR lives on the Xero-hosted page
+  // itself) and collect how the customer paid.
+  html+=`<div class="sec">Payment</div><div id="invoice-card"></div>
+    <div class="fw">
+      <div class="flbl"><span class="req-dot"></span>Payment Method</div>
+      <div class="fhint">Ask the customer how they're paying, then select below</div>
+      <div class="pm-row" id="pm-row">
+        <div class="pm-opt" data-val="PayNow" onclick="selectPaymentMethod('PayNow')">PayNow</div>
+        <div class="pm-opt" data-val="Cash" onclick="selectPaymentMethod('Cash')">Cash</div>
+        <div class="pm-opt" data-val="Other" onclick="selectPaymentMethod('Other')">Other</div>
+      </div>
+    </div>
+    <div class="fw" id="pm-paynow-photo" style="display:none">
+      <div class="flbl"><span class="req-dot"></span>Photo of PayNow confirmation</div>
+      <div class="fhint">Screenshot or photo of the "Payment Successful" screen</div>
+      <div class="photo-area" onclick="triggerPhotoEl('pmproof-inp')" id="pmproof-area">
+        <div class="photo-icon">📷</div><div class="photo-lbl">Tap to take photo</div>
+      </div>
+      <input type="file" accept="image/*" capture="environment" id="pmproof-inp" style="display:none" onchange="handlePaymentProofPhoto(this)">
+    </div>
+    <div class="fw" id="pm-other-note" style="display:none">
+      <div class="flbl"><span class="req-dot"></span>Payment note</div>
+      <div class="fhint">e.g. Pre-paid, Bank transfer, Cheque</div>
+      <input type="text" class="txt-input" id="pm-note-input" placeholder="Describe payment method" oninput="FORM['Payment_Note']=this.value">
+    </div>`;
+
   wrap.innerHTML=html;
+  renderInvoiceCard();
   updateProgress();
+}
+
+function renderInvoiceCard(){
+  const el=document.getElementById('invoice-card');
+  if(!el) return;
+  if(JOB.Xero_Invoice_URL){
+    el.innerHTML=`<div class="alert al-info invoice-card">
+      <div><strong>Invoice ${JOB.Xero_Invoice_Number||''}</strong><br><span style="font-size:12px">Show this to the customer to pay</span></div>
+      <a class="btn btn-primary" href="${JOB.Xero_Invoice_URL}" target="_blank" rel="noopener">View Invoice</a>
+    </div>`;
+  } else {
+    el.innerHTML=`<div class="alert al-warn"><strong>Invoice not ready</strong> — check with the office before taking payment, or proceed and confirm payment method below.</div>`;
+  }
+}
+
+function selectPaymentMethod(val){
+  FORM['Payment_Method']=val;
+  document.querySelectorAll('.pm-opt').forEach(el=>el.classList.toggle('sel', el.dataset.val===val));
+  document.getElementById('pm-paynow-photo').style.display = val==='PayNow' ? 'block' : 'none';
+  document.getElementById('pm-other-note').style.display = val==='Other' ? 'block' : 'none';
+}
+
+async function handlePaymentProofPhoto(input){
+  if(!input.files||!input.files[0]) return;
+  const file=input.files[0];
+  const ext=file.name.split('.').pop().toLowerCase()||'jpg';
+  const fname=`${JOB.Job_ID}_PAYMENT_PROOF_${fmtTs(new Date())}.${ext}`;
+  showOv('Compressing photo...','');
+  const compressed=await compressImage(file);
+  hideOv();
+  const dataUrl=await blobToDataUrl(compressed);
+  PHOTOS['payment_proof']={blob:compressed,name:fname,dataUrl,noPhoto:false};
+  await dbSave('payment_proof',{blob:compressed,name:fname,dataUrl});
+  const area=document.getElementById('pmproof-area');
+  area.classList.add('done');
+  area.innerHTML=`<img src="${dataUrl}" class="photo-preview" style="display:block" alt="">`;
 }
 
 async function handleAfterPhoto(input,id,unitN){
@@ -1127,6 +1199,20 @@ function updateProgress(){
 
 // ── Submit ─────────────────────────────────────────────────────────────────────
 async function submitJob(){
+  // Payment must be recorded before a job can be marked complete
+  if(!FORM['Payment_Method']){
+    alert('Please select how the customer paid.');
+    return;
+  }
+  if(FORM['Payment_Method']==='PayNow' && !PHOTOS['payment_proof']){
+    alert('Please take a photo of the PayNow payment confirmation.');
+    return;
+  }
+  if(FORM['Payment_Method']==='Other' && !(FORM['Payment_Note']||'').trim()){
+    alert('Please describe the payment method.');
+    return;
+  }
+
   // Prevent double-submission
   const submitBtn = document.getElementById('submit-btn');
   if(submitBtn.dataset.submitting === 'true') return;
@@ -1196,6 +1282,9 @@ async function submitJob(){
       Mould_Spotted:FORM['Mould_Spotted']||'FALSE',Gas_Low:FORM['Gas_Low']||'FALSE',
       Condenser_Dirty:FORM['Condenser_Dirty']||'FALSE',
       Aging_Unit:FORM['Aging_Unit']||'FALSE',Notes:FORM['Notes']||'',
+      Payment_Method:FORM['Payment_Method']||'',
+      Payment_Note:FORM['Payment_Note']||'',
+      Payment_Proof_Photo:photoUrls['payment_proof']||'',
       Issues:ISSUES,
       _trigger_upsell:UNITS_TODAY<(parseInt(JOB.Units)||1),
       _trigger_escalation:false, // escalation now comes from star rating
@@ -1449,6 +1538,8 @@ async function loadJobs(){
           Status:        'Scheduled',
           Notes:         parse('notes') || '',
           Date:          dateSGT,
+          Xero_Invoice_URL:    parse('xero_invoice_url') || '',
+          Xero_Invoice_Number: parse('xero_invoice_number') || '',
           _calEventId:   e.id,
           _calendarId:   CFG.CALENDAR_ID,
         };

@@ -631,6 +631,12 @@ html,body{height:100%;height:100dvh;font-family:-apple-system,BlinkMacSystemFont
   <div class="ov-sub" id="ov-sub"></div>
 </div>
 
+<!-- PayNow QR zoom overlay -->
+<div class="overlay" id="qr-zoom-overlay" onclick="this.classList.remove('show')">
+  <img src="paynow-qr-code.png" alt="PayNow QR" style="width:80%;max-width:280px;border-radius:12px">
+  <div class="ov-sub" style="margin-top:16px">Tap anywhere to close</div>
+</div>
+
 </div><!-- /.app -->
 
 <!-- ═══════════════════════════════════════
@@ -1145,14 +1151,26 @@ function renderCompletionForm(){
 function renderInvoiceCard(elId){
   const el=document.getElementById(elId||'invoice-card');
   if(!el) return;
+  // The QR starts hidden everywhere -- Job Start (S2) is about pre-job photos,
+  // not payment, so it never gets revealed there. On Completion (S3) it's
+  // revealed only once the technician actually selects PayNow as the payment
+  // method (see selectPaymentMethod), not just because an invoice exists.
+  const qrElId = 'qr-img-' + (elId || 'invoice-card');
   if(JOB.Xero_Invoice_URL){
-    el.innerHTML=`<div class="alert al-info invoice-card">
-      <div><strong>Invoice ${JOB.Xero_Invoice_Number||''}</strong><br><span style="font-size:12px">Show this to the customer to pay</span></div>
-      <a class="btn btn-primary" href="${JOB.Xero_Invoice_URL}" target="_blank" rel="noopener">View Invoice</a>
+    el.innerHTML=`<div class="alert al-info invoice-card" style="flex-direction:column;align-items:stretch">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div><strong>Invoice ${JOB.Xero_Invoice_Number||''}</strong><br><span style="font-size:12px">Show this to the customer to pay</span></div>
+        <a class="btn btn-primary" href="${JOB.Xero_Invoice_URL}" target="_blank" rel="noopener">View Invoice</a>
+      </div>
+      <img id="${qrElId}" src="paynow-qr-full.png" alt="PayNow QR" style="display:none;width:100%;max-width:220px;margin:12px auto 0;border-radius:8px;cursor:zoom-in" onclick="showQrZoom()">
     </div>`;
   } else {
     el.innerHTML=`<div class="alert al-warn"><strong>Invoice not ready</strong> — check with the office before taking payment, or proceed and confirm payment method below.</div>`;
   }
+}
+
+function showQrZoom(){
+  document.getElementById('qr-zoom-overlay').classList.add('show');
 }
 
 function selectPaymentMethod(val){
@@ -1160,6 +1178,8 @@ function selectPaymentMethod(val){
   document.querySelectorAll('.pm-opt').forEach(el=>el.classList.toggle('sel', el.dataset.val===val));
   document.getElementById('pm-paynow-photo').style.display = val==='PayNow' ? 'block' : 'none';
   document.getElementById('pm-other-note').style.display = val==='Other' ? 'block' : 'none';
+  const qrImg = document.getElementById('qr-img-invoice-card');
+  if(qrImg) qrImg.style.display = val==='PayNow' ? 'block' : 'none';
 }
 
 async function handlePaymentProofPhoto(input){

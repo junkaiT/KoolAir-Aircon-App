@@ -173,6 +173,7 @@ html,body{height:100%;height:100dvh;font-family:-apple-system,BlinkMacSystemFont
   margin-bottom:6px;display:flex;align-items:center;gap:6px}
 .req-dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
 .fhint{font-size:12px;color:var(--mid);margin-bottom:8px}
+.submit-block-msg{font-size:13px;color:var(--red);text-align:center;margin-bottom:8px;font-weight:500}
 
 /* ── Photo area ── */
 .photo-area{border:2px dashed var(--ltgray);border-radius:var(--r);
@@ -498,6 +499,7 @@ html,body{height:100%;height:100dvh;font-family:-apple-system,BlinkMacSystemFont
   <div class="prog-wrap"><div class="prog-bar" id="prog-bar"></div></div>
   <div class="scroll"><div class="pad" id="s3-form"></div></div>
   <div class="footer">
+    <div class="submit-block-msg" id="submit-block-msg" style="display:none"></div>
     <button class="btn btn-success" id="submit-btn" onclick="submitJob()" disabled>✓ Submit &amp; Complete Job</button>
     <div class="fab-wrap">
       <button class="issue-fab" onclick="openIssue('completion')" title="Report issue">⚠</button>
@@ -1034,16 +1036,22 @@ function toggleNoPhoto(id){
 
 function updateArriveBtn(){
   const btn=document.getElementById('arrive-btn');
-  // All units must have photo OR noPhoto flag
+  // All units must have photo OR noPhoto flag -- tracked for the reminder
+  // in markArrived() below, not used to block the button. This is
+  // deliberately non-blocking: a missing before photo is a reminder, not
+  // a gate (unlike the after-photo requirement at submission, which does
+  // still block via updateProgress()/submit-btn).
   const allReady=Array.from({length:UNITS_TODAY},(_,i)=>i+1).every(u=>PHOTOS[`bp${u}`]);
-  btn.disabled=!allReady;
+  btn.dataset.allReady=allReady?'1':'';
 }
 
 function blobToDataUrl(blob){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.readAsDataURL(blob); }); }
 
 function markArrived(){
   const btn=document.getElementById('arrive-btn');
-  if(btn.disabled){ alert('Please take a before photo (or mark as unavailable) for each unit.'); return; }
+  if(!btn.dataset.allReady){
+    alert('Reminder: take a before photo for each unit (or mark as unavailable) before you leave the customer\'s home. You can continue for now.');
+  }
   FORM.Arrived_At=new Date().toISOString();
   FORM.Units_Serviced=UNITS_TODAY;
   renderCompletionForm();
@@ -1198,6 +1206,14 @@ function updateProgress(){
   document.getElementById('prog-bar').style.width=pct+'%';
   document.getElementById('s3-prog').textContent=`${filled}/${total}`;
   document.getElementById('submit-btn').disabled=!photosDone;
+  const blockMsg=document.getElementById('submit-block-msg');
+  if(photosDone){
+    blockMsg.style.display='none';
+  }else{
+    const remaining=reqPhotos.length-reqPhotos.filter(id=>PHOTOS[id]).length;
+    blockMsg.textContent=`Take ${remaining} more after-photo${remaining===1?'':'s'} to submit`;
+    blockMsg.style.display='block';
+  }
 }
 
 // ── Submit ─────────────────────────────────────────────────────────────────────

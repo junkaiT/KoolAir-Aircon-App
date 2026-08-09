@@ -1036,8 +1036,15 @@ function toggleNoPhoto(id){
   const wasNoPhoto=existing.noPhoto;
   if(!wasNoPhoto){ PHOTOS[id]={noPhoto:true,name:`${id}_NO_PHOTO`,dataUrl:null,blob:null}; }
   else { delete PHOTOS[id]; }
-  renderBeforePhotos();
-  updateArriveBtn();
+  // Shared by both the Before Photos (Job Start) and After Photos
+  // (Completion) rows -- each lives in a different render/gate pair, so
+  // route to the matching one rather than always refreshing Before Photos.
+  if(id.startsWith('after_')){
+    renderCompletionForm();
+  } else {
+    renderBeforePhotos();
+    updateArriveBtn();
+  }
 }
 
 function updateArriveBtn(){
